@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const cors = require('cors');
 const express = require('express'), mysql = require('mysql2/promise'), jwt = require('jsonwebtoken'), path = require('path');
 const app = express(); 
@@ -8,9 +9,20 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-const db = mysql.createPool({ host: process.env.DB_HOST, port: process.env.DB_PORT, user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD, database: process.env.DB_NAME, dateStrings: true, connectionLimit: 10 });
-
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: {
+    ca: fs.readFileSync(path.join(__dirname, 'ca.pem'), 'utf8'),
+    rejectUnauthorized: true
+  },
+  dateStrings: true,
+  connectionLimit: 5,
+  connectTimeout: 10000
+});
 // Each list = one SQL query. Edit here to change what a screen shows.
 const LISTS = {
   employees: `SELECT e.EmployeeID, e.FullName, e.Role, e.CNIC, e.PhoneNumber, b.BranchName AS Branch, e.HireDate
