@@ -109,5 +109,18 @@ app.delete('/api/:l/:id', auth, async (req, res) => { const c = row(req, res); i
   catch (e) { await cn.rollback(); res.status(400).json({ error: friendly(e) }); } finally { cn.release(); } });
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-db.query('SELECT 1').then(() => app.listen(process.env.PORT || 3000, () => console.log('SSMS running on http://localhost:' + (process.env.PORT || 3000))))
-  .catch(e => console.error('Cannot connect to MySQL. Check backend/.env:', e.message));
+
+if (require.main === module) {
+  db.query('SELECT 1')
+    .then(() => {
+      app.listen(process.env.PORT || 3000, () => {
+        console.log('SSMS backend running');
+      });
+    })
+    .catch(e => {
+      console.error('Cannot connect to MySQL:', e.message);
+      process.exit(1);
+    });
+}
+
+module.exports = app;
