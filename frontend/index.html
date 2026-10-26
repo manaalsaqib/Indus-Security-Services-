@@ -50,7 +50,7 @@ async function api(p,o={}){const r=await fetch('/api/'+p,{...o,headers:{'Content
  const d=await r.json();if(r.status===401&&p!=='login')signOut();if(!r.ok)throw Error(d.error);return d}
 async function signIn(e){e.preventDefault();$('err').textContent='';
  try {
-  const r = await fetch('https://indus-security-services-y7xl-iksrhw8jq-manaal-projects.vercel.app/api/login', {
+  const r = await fetch('https://indus-security-services-y7xl.vercel.app', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
