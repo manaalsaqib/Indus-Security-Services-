@@ -1,6 +1,13 @@
 require('dotenv').config();
+const cors = require('cors');
 const express = require('express'), mysql = require('mysql2/promise'), jwt = require('jsonwebtoken'), path = require('path');
-const app = express(); app.use(express.json());
+const app = express(); 
+app.use(cors({
+  origin: 'https://manaalsaqib.github.io',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json());
 const db = mysql.createPool({ host: process.env.DB_HOST, port: process.env.DB_PORT, user: process.env.DB_USER,
   password: process.env.DB_PASSWORD, database: process.env.DB_NAME, dateStrings: true, connectionLimit: 10 });
 
