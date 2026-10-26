@@ -1,5 +1,29 @@
 {
   "dependencies": {
-    "cors": "^2.8.6"
-  }
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "express-async-errors": "^3.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.6"
+  },
+  "name": "database-project",
+  "version": "1.0.0",
+  "description": "``` ssms/ ├─ database/   01_schema · 02_seed_data · 03_incidents_complaints · 04_views_triggers_procedures · generate_seed.py ├─ backend/    server.js · package.json · .env.example   (Node + Express + MySQL) └─ frontend/   index.html                                  (served by the backend) ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manaalsaqib/Indus-Security-Services-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/manaalsaqib/Indus-Security-Services-/issues"
+  },
+  "homepage": "https://github.com/manaalsaqib/Indus-Security-Services-#readme"
 }
