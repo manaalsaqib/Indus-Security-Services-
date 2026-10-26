@@ -1,0 +1,87 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indus Security Services</title>
+<style>
+:root{--ink:#241a1a;--bg:#fff;--uni:#7a1f2b;--uni2:#962e3d;--brass:#b58b2a;--line:#d9d9d9;--red:#c0392b;--paper:#fff;
+--f:'Times New Roman',Times,serif;--h:'Times New Roman',Times,serif}
+*{box-sizing:border-box}body{margin:0;font:16px/1.45 var(--f);color:var(--ink);background:var(--bg)}
+h1,h2{font-family:var(--h);margin:0;letter-spacing:.01em}
+button,input{font:inherit}:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:28px;width:min(380px,100%)}
+.card h1{font-size:34px;color:var(--uni)}.card p{margin:4px 0 20px;color:#6b5a5a}
+label{display:block;font-weight:500;margin:12px 0 4px}
+input{width:100%;padding:10px;border:1px solid #b9a9a9;border-radius:4px;background:#fff}
+.btn{margin-top:18px;width:100%;padding:11px;border:0;border-radius:4px;background:var(--uni);color:#fff;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--uni2)}.err{color:var(--red);min-height:20px;margin-top:10px}
+#app{display:none;min-height:100vh;grid-template-columns:220px 1fr}
+nav{background:var(--uni);color:#f6e9e9;padding:18px 0;position:sticky;top:0;height:100vh;overflow:auto}
+nav h2{font-size:26px;padding:0 18px 14px;color:#fff;border-bottom:3px solid var(--brass);margin-bottom:8px}
+nav button{display:block;width:100%;text-align:left;background:none;border:0;color:inherit;padding:9px 18px;cursor:pointer;border-left:4px solid transparent}
+nav button:hover{background:var(--uni2)}nav button.on{border-left-color:var(--brass);background:var(--uni2);font-weight:600}
+nav .me{padding:14px 18px;font-size:13px;opacity:.85}
+main{padding:24px;min-width:0}main h1{font-size:34px;color:var(--uni);margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--brass);padding:12px 14px}
+.stat b{display:block;font:700 34px var(--h);color:var(--uni)}.stat.warn{border-left-color:var(--red)}.stat.warn b{color:var(--red)}
+.tools{display:flex;gap:12px;align-items:center;margin-bottom:10px}.tools input{max-width:320px}
+.wrap{background:var(--paper);border:1px solid var(--line);overflow:auto;max-height:72vh}
+table{border-collapse:collapse;width:100%}th,td{padding:8px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:#fff;font-weight:600;border-bottom:2px solid var(--uni)}tr:nth-child(even) td{background:#f7f9f8}
+.tag{padding:2px 8px;border-radius:10px;background:#fff;border:1px solid var(--line)}.tag.bad{background:#f6d9d6;color:var(--red)}.tag.ok{background:#d8ecdf;color:#1d6b3b}
+dialog{border:1px solid var(--line);border-radius:6px;padding:22px;width:min(440px,94vw);max-height:90vh;overflow:auto}
+dialog::backdrop{background:rgba(22,33,27,.5)}dialog h2{font-size:28px;color:var(--uni)}
+.row{display:flex;gap:10px}.btn.ghost{background:#fff;color:var(--ink);border:1px solid #b9a9a9}.tools .add{width:auto;margin:0 0 0 auto;padding:9px 16px}
+.lnk{background:none;border:0;color:var(--uni);text-decoration:underline;cursor:pointer;padding:0 4px}.lnk.d{color:var(--red)}
+select{width:100%;padding:10px;border:1px solid #b9a9a9;border-radius:4px;background:#fff}
+@media(max-width:700px){#app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;flex-wrap:wrap}nav h2{width:100%}}
+</style></head><body>
+<section id="login"><form class="card" onsubmit="return signIn(event)">
+<h1>Indus Security Services</h1><p>Sign in to the management system.</p>
+<label for="u">Username</label><input id="u" autocomplete="username" required>
+<label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required>
+<button class="btn">Sign in</button><div class="err" id="err" role="alert"></div></form></section>
+<div id="app"><nav><h2>ISS</h2><div id="menu"></div><div class="me" id="me"></div><button onclick="signOut()">Sign out</button></nav>
+<main><h1 id="title"></h1><div id="view"></div></main></div>
+<dialog id="dlg"></dialog>
+<script>
+const $=id=>document.getElementById(id);let token=sessionStorage.token,tables=JSON.parse(sessionStorage.tables||'[]');
+const money=['BaseSalary','Allowances','NetSalary','Amount'],tagOK=['Paid','Present','Active','Available','Deployed','Issued'],tagBAD=['Overdue','Absent','Inactive','Repair'];
+async function api(p,o={}){const r=await fetch('/api/'+p,{...o,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token}});
+ const d=await r.json();if(r.status===401&&p!=='login')signOut();if(!r.ok)throw Error(d.error);return d}
+async function signIn(e){e.preventDefault();$('err').textContent='';
+ try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('u').value,password:$('p').value})});
+  const d=await r.json();if(!r.ok)throw Error(d.error);
+  sessionStorage.token=token=d.token;sessionStorage.tables=JSON.stringify(tables=d.tables);sessionStorage.write=JSON.stringify(d.write);sessionStorage.user=JSON.stringify(d.user);start()}
+ catch(x){$('err').textContent=x.message}return false}
+function signOut(){sessionStorage.clear();location.reload()}
+function start(){const u=JSON.parse(sessionStorage.user);$('login').style.display='none';$('app').style.display='grid';
+ $('me').textContent=u.FullName+' · '+u.Role;
+ $('menu').innerHTML='<button data-p="dashboard">Dashboard</button>'+tables.map(t=>`<button data-p="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('');
+ $('menu').onclick=e=>e.target.dataset.p&&show(e.target.dataset.p);show('dashboard')}
+async function show(p){document.querySelectorAll('#menu button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+ $('title').textContent=p[0].toUpperCase()+p.slice(1);$('view').innerHTML='Loading…';
+ try{p==='dashboard'?dash(await api('dashboard')):grid(await api(p),p)}catch(x){$('view').innerHTML='<p class="err">'+x.message+'</p>'}}
+function dash(d){const s=(n,l,w)=>`<div class="stat ${w?'warn':''}"><b>${n}</b>${l}</div>`;
+ $('view').innerHTML='<div class="stats">'+s(d.employees,'Employees')+s(d.activeGuards,'Active guards')+s(d.benchGuards,'Guards available to deploy')+
+ s(d.clients,'Clients')+s(d.sites,'Sites')+s(d.presentLastDay,'Present on '+d.lastDay)+s(d.pendingPayroll,'Payrolls pending',1)+s('PKR '+Number(d.overdueAmount).toLocaleString(),'Overdue invoices',1)+'</div>'}
+function cell(k,v){if(v==null)return '–';if(money.includes(k))return Number(v).toLocaleString();
+ return tagOK.includes(v)?`<span class="tag ok">${v}</span>`:tagBAD.includes(v)?`<span class="tag bad">${v}</span>`:String(v).replace(/</g,'&lt;')}
+const SEL={Role:['Guard','Supervisor','Operations Manager','General Manager','Accountant'],Shift:['Day','Night'],Severity:['Low','Medium','High']};
+const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function grid(rows,p){const cols=rows[0]?Object.keys(rows[0]):[],w=JSON.parse(sessionStorage.write||'[]').includes(p),id=cols[0];
+ $('view').innerHTML=`<div class="tools"><input id="q" placeholder="Search ${p}" aria-label="Search"><span>${rows.length} rows</span>${w?'<button class="btn add" id="add">Add new</button>':''}</div>
+ <div class="wrap"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}${w?'<th></th>':''}</tr></thead><tbody id="tb"></tbody></table></div>`;
+ const draw=f=>{$('tb').innerHTML=rows.filter(r=>!f||Object.values(r).join(' ').toLowerCase().includes(f)).map(r=>'<tr>'+cols.map(c=>`<td>${cell(c,r[c])}</td>`).join('')+(w?`<td><button class="lnk" data-e="${r[id]}">Edit</button><button class="lnk d" data-d="${r[id]}">Delete</button></td>`:'')+'</tr>').join('')};
+ draw('');$('q').oninput=e=>draw(e.target.value.toLowerCase());
+ if(w){$('add').onclick=()=>form(p);$('tb').onclick=e=>{const b=e.target.dataset;if(b.e)form(p,b.e);if(b.d)del(p,b.d)}}}
+async function form(p,id){const f=await api('meta/'+p),rec=id?await api(p+'/'+id):{},d=$('dlg');
+ d.innerHTML=`<form method="dialog" id="f"><h2>${id?'Edit':'Add'} ${p}</h2>`+f.map(k=>`<label for="f_${k}">${k}</label>`+(SEL[k]?`<select id="f_${k}" name="${k}">${SEL[k].map(o=>`<option ${rec[k]===o?'selected':''}>${o}</option>`).join('')}</select>`:
+ `<input id="f_${k}" name="${k}" type="${/Date$/.test(k)?'date':/Salary|Amount|Allowances/.test(k)?'number':'text'}" value="${esc(rec[k])}">`)).join('')+
+ `<div class="row"><button class="btn" value="ok">Save changes</button><button class="btn ghost" value="x" formnovalidate>Cancel</button></div><div class="err" id="ferr" role="alert"></div></form>`;
+ d.showModal();
+ $('f').onsubmit=async e=>{if(e.submitter.value==='x')return;e.preventDefault();
+  try{await api(id?p+'/'+id:p,{method:id?'PUT':'POST',body:JSON.stringify(Object.fromEntries(new FormData($('f'))))});d.close();show(p)}catch(x){$('ferr').textContent=x.message}}}
+async function del(p,id){if(!confirm('Delete record '+id+'? This cannot be undone.'))return;
+ try{await api(p+'/'+id,{method:'DELETE'});show(p)}catch(x){alert(x.message)}}
+if(token)start();
+</script></body></html>
